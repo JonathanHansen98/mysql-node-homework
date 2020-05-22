@@ -85,7 +85,7 @@ const mainPrompt = async () => {
         await mainPrompt();
         break;
       case 'Remove department':
-        const {departmentList: department} = await deleteDepartmentPrompt(connection)
+        let {departmentList: department} = await deleteDepartmentPrompt(connection)
         const departmentId = await getDepartmentId(connection, department)
         const result = await deleteDepartment(connection, departmentId)
         await mainPrompt()
@@ -110,6 +110,11 @@ const mainPrompt = async () => {
         case 'Update employee':
           const employee = await updateEmployeePrompt(connection);
           await updateEmployee(connection, employee);
+          await mainPrompt();
+          break;
+        case 'Update department':
+          const depart = await updateDepartmentPrompt(connection);
+          await updateDepartment(connection, depart);
           await mainPrompt();
           break;
       default:
@@ -424,7 +429,6 @@ const updateRolePrompt = async(connection) => {
     },
   ];
     const ans = await inq.prompt(questions)
-    console.log(ans)
     if (ans.roleCol === 'All') {
       const updatedRole = await addRolePrompt(connection);
       return [updatedRole, ans.role];
@@ -513,6 +517,38 @@ const updateEmployee = async(connection, employee) => {
     console.log(err)
   }
   };
+const updateDepartmentPrompt = async (connection) => {
+  try {
+    const departments = await getDepartments(connection)
+    const questions = [
+      {
+        type: 'list',
+        name: 'name',
+        message: 'Which department would you like to update?',
+        choices: [...departments]
+      },
+      {
+        type: 'input',
+        name: 'departName',
+        message: 'What is the new name of the department'
+      }
+    ];
+    const ans = await inq.prompt(questions)
+    return ans
+  } catch (err) {
+    console.log(err)
+  }
+};
+const updateDepartment = async(connection, department) => {
+  try {
+    console.log(department.name)
+    const departmentId = await getDepartmentId(connection, department.name)
+    await connection.query(`UPDATE department SET name=? WHERE id=?`, [department.departName, departmentId])
+    console.log(`Department updated: ${department.name}`)
+  } catch (err) {
+    console.log(err)
+  }
+};
 
 
 main();
