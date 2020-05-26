@@ -1,28 +1,7 @@
 const inq = require('inquirer');
 const mysql = require('mysql2/promise');
-const cTable = require('console.table');
 
-
-
-let connection;
-const main = async () => {
-  try {
-    connection = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      port: 3306,
-      password: 'password1',
-      database: 'company_db'
-    });
-    console.log(`Connected as thread ID: ${connection.threadId}`);
-    await mainPrompt()
-    connection.end();
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-const mainPrompt = async () => {
+  const mainPrompt = async () => {
   try {
     const mainQuestions = [
       {
@@ -30,9 +9,9 @@ const mainPrompt = async () => {
         name: 'menuList',
         message: 'What would you like to do?',
         choices: [
-          'Sort by department',
-          'Sort by role',
-          'Sort by employee',
+          'View by department',
+          'View by role',
+          'View by employee',
           'Add employee',
           'Remove employee',
           'Update employee',
@@ -41,26 +20,24 @@ const mainPrompt = async () => {
           'Update department',
           'Add role',
           'Remove role',
-          'Update role',
-          'Exit'
+          'Update role'
         ]
       }
     ];
-    const table = await viewByEmployee(connection)
-    console.table(table)
+    await viewByEmployee(connection)
     const answers = await inq.prompt(mainQuestions)
     switch (answers.menuList) {
-      case 'Sort by department':
+      case 'View by department':
         let res = await viewByDepartment(connection)
         console.table(res)
         await mainPrompt()
         break;
-      case 'Sort by role':
+      case 'View by role':
         let res1 = await viewByRole(connection)
         console.table(res1);
         await mainPrompt();
         break;
-      case 'Sort by employee':
+      case 'View by employee':
         let res2 = await viewByEmployee(connection)
         console.table(res2)
         await mainPrompt()
@@ -81,7 +58,7 @@ const mainPrompt = async () => {
         await mainPrompt();
         break;
       case 'Remove department':
-        let { departmentList: department } = await deleteDepartmentPrompt(connection)
+        let {departmentList: department} = await deleteDepartmentPrompt(connection)
         const departmentId = await getDepartmentId(connection, department)
         await deleteDepartment(connection, departmentId)
         await mainPrompt()
@@ -90,7 +67,7 @@ const mainPrompt = async () => {
         const newRole = await addRolePrompt(connection);
         await addRole(connection, newRole);
         await mainPrompt();
-        break;
+        break ;
       case 'Remove role':
         const roleToDelete = await deleteRolePrompt(connection);
         const roleId = await getRoleId(connection, roleToDelete);
@@ -103,30 +80,28 @@ const mainPrompt = async () => {
         await updateRole(connection, role)
         await mainPrompt();
         break;
-      case 'Update employee':
-        const employee = await updateEmployeePrompt(connection);
-        await updateEmployee(connection, employee);
-        await mainPrompt();
-        break;
-      case 'Update department':
-        const depart = await updateDepartmentPrompt(connection);
-        await updateDepartment(connection, depart);
-        await mainPrompt();
-        break;
-      case 'Exit':
-        return;  
-      break;
-
+        case 'Update employee':
+          const employee = await updateEmployeePrompt(connection);
+          await updateEmployee(connection, employee);
+          await mainPrompt();
+          break;
+        case 'Update department':
+          const depart = await updateDepartmentPrompt(connection);
+          await updateDepartment(connection, depart);
+          await mainPrompt();
+          break;
       default:
-        return;
         break;
     }
-  } catch (err) {
+    } catch (err) {
     console.log(err)
   }
 };
 
-// Employee Funcs
+// Managers
+
+
+// Need try catch - Employee Funcs
 function Employee(first, last, role, manager) {
   this.first_name = first;
   this.last_name = last;
@@ -170,20 +145,20 @@ const addEmployee = async (connection, newEmployee) => {
     const addedEmployee = new Employee(newEmployee.employeeFirstName, newEmployee.employeeLastName, employeeRole, newEmployee.managerId)
     await connection.query(`INSERT INTO employee SET ?`, addedEmployee)
     console.log(`Added employee to database: ${addedEmployee.first_name} ${addedEmployee.last_name}`)
-  } catch (err) {
+    } catch (err) {
     console.log(err)
   }
 };
-const getEmployeeNames = async (connection) => {
+const getEmployeeNames = async(connection) => {
   try {
     const [rows] = await connection.query(`SELECT first_name, last_name FROM employee`)
     const fullNames = [];
     rows.forEach(row => {
       const fullName = `${row.first_name} ${row.last_name}`
-      fullNames.push(fullName)
+      fullNames.push(fullName) 
     });
     return fullNames;
-  } catch (err) {
+    } catch (err) {
     console.log(err);
   }
 };
@@ -200,7 +175,7 @@ const deleteEmployeePrompt = async (connection) => {
     ]
     const ans = await inq.prompt(questions)
     return ans
-  } catch (err) {
+    } catch (err) {
     console.log(err)
   }
 };
@@ -210,7 +185,7 @@ const deleteEmployee = async (connection, employee) => {
     const employeeId = await getEmployeeId(connection, employeeArr[0], employeeArr[1]);
     await connection.query(`DELETE FROM employee WHERE id=?`, [employeeId])
     console.log(`Employee Deleted`)
-
+    
   } catch (err) {
     console.log(err)
   }
@@ -222,15 +197,15 @@ const getDepartments = async (connection) => {
   try {
     const [rows] = await connection.query('SELECT * FROM department');
     return rows;
-  } catch (err) {
+    } catch (err) {
     console.log(err)
   }
 };
 const getDepartmentId = async (connection, department) => {
   try {
-    const [rows] = await connection.query('SELECT id FROM department WHERE name=?', [department]);
+    const [rows] = await connection.query('SELECT id FROM department WHERE name=?',[department]);
     return rows[0].id;
-  } catch (err) {
+    } catch (err) {
     console.log(err);
   }
 };
@@ -238,22 +213,22 @@ const deleteDepartmentPrompt = async (connection) => {
   try {
     const departments = await getDepartments(connection)
     let questions = [
-      {
-        type: 'list',
-        name: 'departmentList',
-        message: 'Which department would you like to delete?',
-        choices: [...departments]
-      }
-    ];
+    {
+      type:'list',
+      name:'departmentList',
+      message:'Which department would you like to delete?',
+      choices: [...departments]
+    }
+  ];
     return inq.prompt(questions);
-  } catch (err) {
+    } catch (err) {
     console.log(err);
   }
 };
 const deleteDepartment = async (connection, departId) => {
   try {
-    await connection.query('DELETE FROM department WHERE id=?', [departId]);
-  } catch (err) {
+    await connection.query('DELETE FROM department WHERE id=?',[departId]);
+    } catch (err) {
     console.log(err);
   }
 };
@@ -261,18 +236,18 @@ const addDepartmentPrompt = async () => {
   try {
     let questions = [
       {
-        type: 'input',
-        name: 'departmentName',
-        message: 'What is the name of the department?',
+        type:'input',
+        name:'departmentName',
+        message:'What is the name of the department?',
       }
     ];
-    const { departmentName } = await inq.prompt(questions);
+    const {departmentName} = await inq.prompt(questions);
     return departmentName;
-  } catch (err) {
+    } catch (err) {
     console.log(err);
   }
 };
-const addDepartment = async (connection, departmentName) => {
+const addDepartment = async(connection, departmentName) => {
   try {
     const res = await connection.query(`INSERT INTO department (name) VALUES(?)`, [departmentName]);
     console.log(`Added department: ${departmentName}`)
@@ -299,7 +274,7 @@ const viewByEmployee = async (connection) => {
       ON department.id = role.department_id
     ORDER BY first_name;`)
     return rows;
-  } catch (err) {
+    } catch (err) {
     console.log(err)
   }
 };
@@ -320,7 +295,7 @@ const viewByDepartment = async (connection) => {
 
 // Role funcs
 
-function Role(title, salary, department) {
+function Role (title,salary,department) {
   this.title = title;
   this.salary = salary;
   this.department_id = department
@@ -332,13 +307,13 @@ const getRoles = async (connection) => {
       ORDER BY title;`)
     rows.forEach(role => roles.push(role.Title))
     return roles
-  } catch (err) {
+    } catch (err) {
     console.log(err)
   }
 };
-const getRoleId = async (connection, role) => {
+const getRoleId = async(connection,role) => {
   try {
-    const [rows] = await connection.query('SELECT id FROM role WHERE title=?', [role]);
+    const [rows] = await connection.query('SELECT id FROM role WHERE title=?',[role]);
     return rows[0].id;
   } catch (err) {
     console.log(err)
@@ -367,38 +342,38 @@ const addRolePrompt = async (connection) => {
     ]
     const ans = await inq.prompt(questions)
     return ans
-  } catch (err) {
+    } catch (err) {
     console.log(err)
   }
 };
-const addRole = async (connection, role) => {
+const addRole = async(connection, role) => {
   try {
     const roleDepartmentId = await getDepartmentId(connection, role.roleDepartment)
-    const newRoleObj = new Role(role.title, role.salary, roleDepartmentId)
-    await connection.query(`INSERT INTO role SET ?;`, newRoleObj)
+    const newRoleObj = new Role(role.title,role.salary, roleDepartmentId)
+    await connection.query(`INSERT INTO role SET ?;`,newRoleObj)
     return console.log(`Added role: ${newRoleObj.title}`);
   } catch (err) {
     console.log(err)
   }
 };
-const deleteRolePrompt = async (connection) => {
+const deleteRolePrompt = async(connection) => {
   try {
     const roles = await getRoles(connection)
     let questions = [{
       type: 'list',
       name: 'role',
-      message: 'What role would you like to upate?',
+      message:'What role would you like to upate?',
       choices: [...roles]
     }]
     const ans = await inq.prompt(questions)
-    return ans.role;
+    return ans.role;   
   } catch (err) {
     console.log(err)
   }
 };
-const deleteRole = async (connection, roleId) => {
+const deleteRole = async(connection, roleId) => {
   try {
-    await connection.query('DELETE FROM role WHERE id=?', [roleId]);
+    await connection.query('DELETE FROM role WHERE id=?',[roleId]);    
   } catch (err) {
     console.log(err)
   }
@@ -423,53 +398,53 @@ const getCols = async (connection, tableName) => {
   console.log(formattedCols)
   return formattedCols
 };
-const getEmployeeId = async (connection, firstName, lastName) => {
-  const [rows] = await connection.query(`SELECT id FROM employee WHERE first_name=? AND last_name=?`, [firstName, lastName])
-  return (rows[0].id)
+const getEmployeeId = async(connection, firstName, lastName) => {
+  const [rows] = await connection.query(`SELECT id FROM employee WHERE first_name=? AND last_name=?`,[firstName, lastName])
+  return(rows[0].id)
 };
 
 
 // Update Funcs
-const updateRolePrompt = async (connection) => {
+const updateRolePrompt = async(connection) => {
   const roles = await getRoles(connection)
   const roleCols = await getCols(connection, 'role')
   const questions = [
     {
       type: 'list',
       name: 'role',
-      message: 'What role would you like to upate?',
+      message:'What role would you like to upate?',
       choices: [...roles]
     },
     {
       type: 'list',
       name: 'roleCol',
-      message: 'What would you like to update about the role?',
+      message:'What would you like to update about the role?',
       choices: [...roleCols, 'All']
     },
   ];
-  const ans = await inq.prompt(questions)
-  if (ans.roleCol === 'All') {
-    const updatedRole = await addRolePrompt(connection);
-    return [updatedRole, ans.role];
-  } else {
-    let colReplaced = ans.roleCol.replace(/ /g, "_")
-    let sqlFormattedCol = colReplaced.charAt(0).toLowerCase() + colReplaced.slice(1)
-    const updateQuestions = [
-      {
-        type: 'input',
-        name: sqlFormattedCol,
-        message: `Enter the new ${ans.roleCol}`
+    const ans = await inq.prompt(questions)
+    if (ans.roleCol === 'All') {
+      const updatedRole = await addRolePrompt(connection);
+      return [updatedRole, ans.role];
+    } else {
+      let colReplaced = ans.roleCol.replace(/ /g, "_")
+      let sqlFormattedCol = colReplaced.charAt(0).toLowerCase() + colReplaced.slice(1)
+      const updateQuestions = [
+        {
+          type: 'input',
+          name: sqlFormattedCol,
+          message: `Enter the new ${ans.roleCol}`
+        }
+      ]
+        const ans2 = await inq.prompt(updateQuestions);
+        return [ans2, ans.role];
       }
-    ]
-    const ans2 = await inq.prompt(updateQuestions);
-    return [ans2, ans.role];
-  }
 };
-const updateRole = async (connection, role) => {
+const updateRole = async(connection, role) => {
   const roleLength = Object.keys(role[0]).length;
   if (roleLength > 1) {
     const roleDepartmentId = await getDepartmentId(connection, role[0].roleDepartment)
-    const newRoleObj = new Role(role[0].title, role[0].salary, roleDepartmentId)
+    const newRoleObj = new Role(role[0].title,role[0].salary, roleDepartmentId)
     await connection.query(`UPDATE role SET ? where title=?`, [newRoleObj, role[1]])
     console.log(`Role updated: ${role[0].title}`)
   } else {
@@ -477,10 +452,10 @@ const updateRole = async (connection, role) => {
     console.log(`Role updated: ${role[0].title}`);
   }
 };
-const updateEmployeePrompt = async (connection) => {
+const updateEmployeePrompt = async(connection) => {
   try {
     const employees = await getEmployeeNames(connection)
-    const employeeCols = await getCols(connection, 'employee')
+    const employeeCols = await getCols(connection, 'employee') 
     questions = [
       {
         type: 'list',
@@ -509,33 +484,33 @@ const updateEmployeePrompt = async (connection) => {
           message: `Enter the new ${ans.employeeCol.charAt(0).toLowerCase() + ans.employeeCol.slice(1)}`
         }
       ]
-      const ans2 = await inq.prompt(updateQuestions);
-      return ([ans2, ans.name]);
+        const ans2 = await inq.prompt(updateQuestions);
+        return ([ans2, ans.name]);
     }
   } catch (err) {
     console.log(err)
   }
 };
-const updateEmployee = async (connection, employee) => {
+const updateEmployee = async(connection, employee) => {
   try {
     const employeeLength = Object.keys(employee[0]).length
-    if (employeeLength > 1) {
-      const employeeRole = await getRoleId(connection, newEmployee.employeeRole)
-      const updatedEmployee = new Employee(newEmployee.employeeFirstName, newEmployee.employeeLastName, employeeRole, newEmployee.managerId)
-      const employeeId = await getEmployeeId(connection, updatedEmployee.first_name, updateEmployee.last_name)
-      await connection.query(`UPDATE employee SET ? WHERE id=?`, [updateEmployee, employeeId]);
-      console.log(`Employee updated: ${updateEmployee.name}`)
-    }
-    else {
-      const nameArr = employee[1].split(" ")
-      const employeeId = await getEmployeeId(connection, nameArr[0], nameArr[1])
-      await connection.query(`UPDATE employee SET ? WHERE id=?`, [employee[0], employeeId])
-      console.log(`Employee updated`)
-    }
+  if (employeeLength > 1) {
+    const employeeRole = await getRoleId(connection, newEmployee.employeeRole)
+    const updatedEmployee = new Employee(newEmployee.employeeFirstName, newEmployee.employeeLastName, employeeRole, newEmployee.managerId)
+    const employeeId = await getEmployeeId(connection, updatedEmployee.first_name, updateEmployee.last_name)
+    await connection.query(`UPDATE employee SET ? WHERE id=?`,[updateEmployee, employeeId]);
+    console.log(`Employee updated: ${updateEmployee.name}`)
+  }
+  else {
+    const nameArr = employee[1].split(" ")
+    const employeeId = await getEmployeeId(connection, nameArr[0],nameArr[1])
+    await connection.query(`UPDATE employee SET ? WHERE id=?`,[employee[0],employeeId])
+    console.log(`Employee updated`)
+  }
   } catch (err) {
     console.log(err)
   }
-};
+  };
 const updateDepartmentPrompt = async (connection) => {
   try {
     const departments = await getDepartments(connection)
@@ -558,7 +533,7 @@ const updateDepartmentPrompt = async (connection) => {
     console.log(err)
   }
 };
-const updateDepartment = async (connection, department) => {
+const updateDepartment = async(connection, department) => {
   try {
     console.log(department.name)
     const departmentId = await getDepartmentId(connection, department.name)
@@ -568,8 +543,3 @@ const updateDepartment = async (connection, department) => {
     console.log(err)
   }
 };
-
-main();
-
-
-
