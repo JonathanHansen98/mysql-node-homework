@@ -24,107 +24,143 @@ const main = async () => {
 
 const mainPrompt = async () => {
   try {
-    const mainQuestions = [
-      {
-        type: 'list',
-        name: 'menuList',
-        message: 'What would you like to do?',
-        choices: [
-          'Sort by department',
-          'Sort by role',
-          'Sort by employee',
-          'Add employee',
-          'Remove employee',
-          'Update employee',
-          'Add department',
-          'Remove department',
-          'Update department',
-          'Add role',
-          'Remove role',
-          'Update role',
-          'Exit'
-        ]
-      }
-    ];
     const table = await viewByEmployee(connection)
     console.table(table)
-    const answers = await inq.prompt(mainQuestions)
-    switch (answers.menuList) {
-      case 'Sort by department':
-        let res = await viewByDepartment(connection)
-        console.table(res)
-        await mainPrompt()
-        break;
-      case 'Sort by role':
-        let res1 = await viewByRole(connection)
-        console.table(res1);
-        await mainPrompt();
-        break;
-      case 'Sort by employee':
-        let res2 = await viewByEmployee(connection)
-        console.table(res2)
-        await mainPrompt()
-        break;
-      case 'Add employee':
-        const newEmployee = await addEmployeePrompt(connection)
-        await addEmployee(connection, newEmployee)
-        await mainPrompt()
-        break;
-      case 'Remove employee':
-        const emp = await deleteEmployeePrompt(connection)
-        await deleteEmployee(connection, emp);
-        await mainPrompt();
-        break;
-      case 'Add department':
-        const departmentName = await addDepartmentPrompt()
-        await addDepartment(connection, departmentName)
-        await mainPrompt();
-        break;
-      case 'Remove department':
-        let { departmentList: department } = await deleteDepartmentPrompt(connection)
-        const departmentId = await getDepartmentId(connection, department)
-        await deleteDepartment(connection, departmentId)
-        await mainPrompt()
-        break;
-      case 'Add role':
-        const newRole = await addRolePrompt(connection);
-        await addRole(connection, newRole);
-        await mainPrompt();
-        break;
-      case 'Remove role':
-        const roleToDelete = await deleteRolePrompt(connection);
-        const roleId = await getRoleId(connection, roleToDelete);
-        await deleteRole(connection, roleId)
-        console.log(`Role deleted: ${roleToDelete}`)
-        await mainPrompt();
-        break;
-      case 'Update role':
-        const role = await updateRolePrompt(connection)
-        await updateRole(connection, role)
-        await mainPrompt();
-        break;
-      case 'Update employee':
-        const employee = await updateEmployeePrompt(connection);
-        await updateEmployee(connection, employee);
-        await mainPrompt();
-        break;
-      case 'Update department':
-        const depart = await updateDepartmentPrompt(connection);
-        await updateDepartment(connection, depart);
-        await mainPrompt();
-        break;
-      case 'Exit':
-        return;  
-      break;
-
-      default:
-        return;
-        break;
-    }
+    await firstPrompt(connection)
   } catch (err) {
     console.log(err)
   }
 };
+
+const firstPrompt = async () => {
+  const mainQuestions = [
+    {
+      type: 'list',
+      name: 'menuList',
+      message: 'What would you like to do?',
+      choices: [
+        'View All',
+        'View Employees',
+        'View Roles',
+        'View Departments',
+        'Add employee',
+        'Remove employee',
+        'Update employee',
+        'Update employee role',
+        'Add department',
+        'Remove department',
+        'Update department',
+        'Add role',
+        'Remove role',
+        'Update role',
+        'Exit'
+      ]
+    }
+  ];
+  const answers = await inq.prompt(mainQuestions)
+  switch (answers.menuList) {
+    case 'View All':
+      const table = await viewByEmployee(connection)
+      console.table(table)
+      await firstPrompt();
+      break;
+    case 'View Employees':
+      let res = await getEmployeeNames(connection)
+      const nameArr =[];
+      res.forEach(name => {
+        const nameObj = {
+          Employees:name
+        }
+        nameArr.push(nameObj)
+      })
+      console.table(nameArr)
+      await firstPrompt()
+      break;
+    case 'View Roles':
+      let res1 = await getRoles(connection)
+      const roleObjArr = [];
+      res1.forEach(role => {
+        const roleTitle = {
+          Role: role
+        }
+        roleObjArr.push(roleTitle)
+      })
+      console.table(roleObjArr);
+      await firstPrompt();
+      break;
+    case 'View Departments':
+      let res2 = await getDepartments(connection)
+      const departObjArr = [];
+      res2.forEach(depart => {
+        const departObj = {
+          Departments: depart.name
+        }
+        departObjArr.push(departObj)
+      })
+      console.table(departObjArr)
+      await firstPrompt()
+      break;
+    case 'Add employee':
+      const newEmployee = await addEmployeePrompt(connection)
+      await addEmployee(connection, newEmployee)
+      await firstPrompt()
+      break;
+    case 'Remove employee':
+      const emp = await deleteEmployeePrompt(connection)
+      await deleteEmployee(connection, emp);
+      await firstPrompt();
+      break;
+    case 'Add department':
+      const departmentName = await addDepartmentPrompt()
+      await addDepartment(connection, departmentName)
+      await firstPrompt();
+      break;
+    case 'Remove department':
+      let { departmentList: department } = await deleteDepartmentPrompt(connection)
+      const departmentId = await getDepartmentId(connection, department)
+      await deleteDepartment(connection, departmentId)
+      await firstPrompt()
+      break;
+    case 'Add role':
+      const newRole = await addRolePrompt(connection);
+      await addRole(connection, newRole);
+      await firstPrompt();
+      break;
+    case 'Remove role':
+      const roleToDelete = await deleteRolePrompt(connection);
+      const roleId = await getRoleId(connection, roleToDelete);
+      await deleteRole(connection, roleId)
+      console.log(`Role deleted: ${roleToDelete}`)
+      await firstPrompt();
+      break;
+    case 'Update role':
+      const role = await updateRolePrompt(connection)
+      await updateRole(connection, role)
+      await firstPrompt();
+      break;
+    case 'Update employee':
+      const employee = await updateEmployeePrompt(connection);
+      await updateEmployee(connection, employee);
+      await firstPrompt();
+      break;
+    case 'Update department':
+      const depart = await updateDepartmentPrompt(connection);
+      await updateDepartment(connection, depart);
+      await firstPrompt();
+      break;
+      case 'Update employee role':
+        const ans = await updateEmployeeRolePrompt(connection)
+        await updateEmployeeRole(connection, ans)
+      break;
+    case 'Exit':
+      return;  
+    break;
+
+    default:
+      return;
+      break;
+  }
+}
 
 // Employee Funcs
 function Employee(first, last, role, manager) {
@@ -135,6 +171,7 @@ function Employee(first, last, role, manager) {
 }
 const addEmployeePrompt = async (connection) => {
   try {
+    const managers = await getManagers(connection)
     const roles = await getRoles(connection)
     const addEmployeeQuestions = [
       {
@@ -153,9 +190,10 @@ const addEmployeePrompt = async (connection) => {
         choices: [...roles]
       },
       {
-        type: 'number',
-        name: 'managerId',
-        message: `What is their managers ID number?`
+        type: 'list',
+        name: 'manager',
+        message: `Who is their manager?`,
+        choices: [...managers]
       }
     ]
     const ans = await inq.prompt(addEmployeeQuestions)
@@ -166,8 +204,10 @@ const addEmployeePrompt = async (connection) => {
 };
 const addEmployee = async (connection, newEmployee) => {
   try {
+    const managerArr = newEmployee.manager.split(' ')
+    const ManagerId = await getEmployeeId(connection,managerArr[0],managerArr[1])
     const employeeRole = await getRoleId(connection, newEmployee.employeeRole)
-    const addedEmployee = new Employee(newEmployee.employeeFirstName, newEmployee.employeeLastName, employeeRole, newEmployee.managerId)
+    const addedEmployee = new Employee(newEmployee.employeeFirstName, newEmployee.employeeLastName, employeeRole, ManagerId)
     await connection.query(`INSERT INTO employee SET ?`, addedEmployee)
     console.log(`Added employee to database: ${addedEmployee.first_name} ${addedEmployee.last_name}`)
   } catch (err) {
@@ -428,7 +468,41 @@ const getEmployeeId = async (connection, firstName, lastName) => {
   return (rows[0].id)
 };
 
-
+const updateEmployeeRolePrompt = async (connection) => {
+  try {
+    const employees = await getEmployeeNames(connection)
+    const roles = await getRoles(connection)
+    questions = [
+      {
+        type: 'list',
+        name: 'name',
+        message: 'Which employee would you like to update?',
+        choices: employees
+      },
+      {
+        type: 'list',
+        name: 'title',
+        message: 'Choose the new role title.',
+        choices: [...roles]
+      }
+    ]
+    const ans = await inq.prompt(questions)
+    return ans
+  } catch (err) {
+    console.log(err)
+  }
+};
+updateEmployeeRole = async (connection, employee) => {
+  try {
+    const nameArr = employee.name.split(' ')
+    const roleId = await getRoleId(connection, employee.title)
+    const employeeId = await getEmployeeId(connection, nameArr[0], nameArr[1])
+    await connection.query('UPDATE employee SET role_id=? WHERE id=?',[roleId, employeeId])
+    console.log(`successfully updated`)
+  } catch (err) {
+    console.log(err)
+  }
+};
 // Update Funcs
 const updateRolePrompt = async (connection) => {
   const roles = await getRoles(connection)
@@ -521,7 +595,7 @@ const updateEmployee = async (connection, employee) => {
     const employeeLength = Object.keys(employee[0]).length
     if (employeeLength > 1) {
       const employeeRole = await getRoleId(connection, newEmployee.employeeRole)
-      const updatedEmployee = new Employee(newEmployee.employeeFirstName, newEmployee.employeeLastName, employeeRole, newEmployee.managerId)
+      const updatedEmployee = new Employee(employee.employeeFirstName, employee.employeeLastName, employeeRole, employee.managerId)
       const employeeId = await getEmployeeId(connection, updatedEmployee.first_name, updateEmployee.last_name)
       await connection.query(`UPDATE employee SET ? WHERE id=?`, [updateEmployee, employeeId]);
       console.log(`Employee updated: ${updateEmployee.name}`)
@@ -569,6 +643,14 @@ const updateDepartment = async (connection, department) => {
   }
 };
 
+const getManagers = async (connection) => {
+  const fullNames = [];
+  const [rows] = await connection.query(`SELECT first_name, last_name from employee WHERE manager_id IS NULL;`)
+  rows.forEach(name => {
+    fullNames.push(`${name.first_name} ${name.last_name}`)
+  })
+  return fullNames
+};
 main();
 
 

@@ -1,7 +1,11 @@
 -- Create Departments
-
+USE company_db;
+ 
 INSERT INTO department(name)
-VALUES('Engineering','Sales','Admin','Finance');
+VALUES('Engineering'),
+('Sales'),
+('Admin'),
+('Finance');
 
 -- 1 - Engineering roles
 
